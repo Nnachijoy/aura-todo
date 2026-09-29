@@ -32,6 +32,16 @@ function to24Hour(dt) {
   return `${h}:${m}`;
 }
 
+function friendlyWhen(task) {
+  if (!task.due_date) return null;
+  const d = new Date(task.due_date);
+  const h = d.getHours();
+  const isAllDay = h <= 1 || h >= 23;
+  const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  if (isAllDay) return dateStr;
+  return `${dateStr} · ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+}
+
 export default function TaskItem({ task }) {
   const qc = useQueryClient();
   const [expanded, setExpanded] = useState(false);
@@ -173,6 +183,8 @@ export default function TaskItem({ task }) {
     el.click();
   };
 
+  const whenLabel = friendlyWhen(task);
+
   return (
     <motion.div
       ref={setNodeRef}
@@ -222,7 +234,7 @@ export default function TaskItem({ task }) {
             <div
               onClick={startEdit}
               className={clsx(
-                "font-medium transition text-white cursor-text rounded px-1 -mx-1 hover:bg-white/5 break-words",
+                "font-medium transition text-white cursor-text rounded px-1 -mx-1 hover:bg-white/5 break-words text-sm sm:text-base",
                 task.completed && "line-through text-white/30"
               )}
               title="Click to edit"
@@ -231,7 +243,8 @@ export default function TaskItem({ task }) {
             </div>
           )}
 
-          <div className="flex items-center gap-2 mt-1.5 text-xs text-white/40 flex-wrap">
+          {/* Meta row — priority + when chip */}
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
             <select
               value={task.priority || "medium"}
               onChange={(e) => update.mutate({ priority: e.target.value })}
@@ -248,77 +261,78 @@ export default function TaskItem({ task }) {
               ))}
             </select>
 
-            {task.tags && <span>{task.tags}</span>}
-
-            {editingWhen ? (
-              <div
-                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-violet-500/10 border border-violet-400/30 flex-wrap"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <input
-                  ref={dateRef}
-                  type="date"
-                  value={tempDate}
-                  onChange={(e) => setTempDate(e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="bg-transparent outline-none text-[11px] text-violet-200 [color-scheme:dark] cursor-pointer"
-                />
-                <input
-                  type="time"
-                  value={tempTime}
-                  onChange={(e) => setTempTime(e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="bg-transparent outline-none text-[11px] text-violet-200 [color-scheme:dark] cursor-pointer w-[68px]"
-                />
-                <button
-                  onClick={saveWhen}
-                  className="px-2 py-0.5 rounded bg-violet-500 hover:bg-violet-600 text-white text-[10px] font-semibold"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={clearWhen}
-                  className="px-2 py-0.5 rounded border border-white/10 text-white/60 hover:text-white text-[10px]"
-                >
-                  Clear
-                </button>
-                <button
-                  onClick={() => setEditingWhen(false)}
-                  className="px-2 py-0.5 rounded text-white/40 hover:text-white text-[10px]"
-                >
-                  ✕
-                </button>
-              </div>
-            ) : (
+            {/* When chip — compact */}
+            {!editingWhen && (
               <button
                 onClick={openWhenEditor}
                 className={clsx(
                   "flex items-center gap-1 px-2 py-0.5 rounded-full transition text-[10px]",
                   task.due_date
                     ? "bg-violet-500/10 border border-violet-400/30 text-violet-300 hover:brightness-125"
-                    : "border border-white/10 text-white/50 hover:text-white hover:bg-white/5"
+                    : "border border-white/10 text-white/40 hover:text-white hover:bg-white/5"
                 )}
-                title={task.due_date ? "Click to edit date/time" : "Add a date"}
+                title={task.due_date ? "Edit date" : "Set a date"}
               >
-                <CalendarIcon className="w-3 h-3" />
-                {task.due_date ? (
-                  <>
-                    {new Date(task.due_date).toLocaleDateString()}
-                    {(() => {
-                      const d = new Date(task.due_date);
-                      const h = d.getHours();
-                      if (h <= 1 || h >= 23) return "";
-                      return ` · ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-                    })()}
-                  </>
-                ) : (
-                  "Set date"
-                )}
+                <CalendarIcon className="w-2.5 h-2.5" />
+                {whenLabel || "Set date"}
               </button>
             )}
           </div>
+
+          {/* Inline date editor — only shows when tapped */}
+          {editingWhen && (
+            <div
+              className="mt-2 p-3 rounded-xl bg-violet-500/10 border border-violet-400/30 space-y-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="text-[10px] uppercase tracking-wider text-violet-300 w-full sm:w-auto">
+                  Date
+                </label>
+                <input
+                  ref={dateRef}
+                  type="date"
+                  value={tempDate}
+                  onChange={(e) => setTempDate(e.target.value)}
+                  className="bg-transparent border border-violet-400/30 rounded-lg px-2 py-1 outline-none text-xs text-white [color-scheme:dark] cursor-pointer flex-1 min-w-0"
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="text-[10px] uppercase tracking-wider text-violet-300 w-full sm:w-auto">
+                  Time
+                </label>
+                <input
+                  type="time"
+                  value={tempTime}
+                  onChange={(e) => setTempTime(e.target.value)}
+                  className="bg-transparent border border-violet-400/30 rounded-lg px-2 py-1 outline-none text-xs text-white [color-scheme:dark] cursor-pointer flex-1 min-w-0"
+                />
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  onClick={saveWhen}
+                  className="px-3 py-1.5 rounded-lg bg-violet-500 hover:bg-violet-600 text-white text-xs font-semibold"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={clearWhen}
+                  className="px-3 py-1.5 rounded-lg border border-white/10 text-white/60 hover:text-white text-xs"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={() => setEditingWhen(false)}
+                  className="ml-auto px-3 py-1.5 rounded-lg text-white/40 hover:text-white text-xs"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* Action buttons */}
         <div className="flex items-center gap-0.5 sm:gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition shrink-0">
           <button
             onClick={breakdown}
