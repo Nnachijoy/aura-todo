@@ -9,11 +9,8 @@ app = FastAPI(title="Aura API")
 
 app.add_middleware(
     CORSMiddleware,
-        allow_origins=[
-        "http://localhost:5173",
-        "https://taskwithaura.netlify.app",
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
