@@ -11,10 +11,10 @@ import api from "../lib/api";
 const PRIORITIES = ["low", "medium", "high", "urgent"];
 
 const priorityColors = {
-  low: "bg-blue-500/15 text-blue-300",
-  medium: "bg-amber-500/15 text-amber-300",
-  high: "bg-orange-500/15 text-orange-300",
-  urgent: "bg-red-500/15 text-red-300",
+  low: "bg-blue-500/20 text-blue-300",
+  medium: "bg-amber-500/20 text-amber-300",
+  high: "bg-orange-500/20 text-orange-300",
+  urgent: "bg-red-500/20 text-red-300",
 };
 
 function toISODate(d) {
@@ -211,13 +211,13 @@ export default function TaskItem({ task }) {
         <button
           onClick={toggle}
           className={clsx(
-            "w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0 mt-0.5",
+            "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0 mt-0.5",
             task.completed
               ? "bg-violet-500 border-violet-500 scale-95"
               : "border-white/20 hover:border-violet-400"
           )}
         >
-          {task.completed && <Check className="w-3 h-3 text-white" />}
+          {task.completed && <Check className="w-3.5 h-3.5 text-white" />}
         </button>
 
         <div className="flex-1 min-w-0">
@@ -234,7 +234,7 @@ export default function TaskItem({ task }) {
             <div
               onClick={startEdit}
               className={clsx(
-                "font-medium transition text-white cursor-text rounded px-1 -mx-1 hover:bg-white/5 break-words text-sm sm:text-base leading-snug",
+                "font-medium transition text-white cursor-text rounded px-1 -mx-1 hover:bg-white/5 break-words text-sm sm:text-base",
                 task.completed && "line-through text-white/30"
               )}
               title="Click to edit"
@@ -243,14 +243,14 @@ export default function TaskItem({ task }) {
             </div>
           )}
 
-          {/* Meta row — compact chips */}
-          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+          {/* Meta row — priority + when chip */}
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
             <select
               value={task.priority || "medium"}
               onChange={(e) => update.mutate({ priority: e.target.value })}
               onClick={(e) => e.stopPropagation()}
               className={clsx(
-                "px-1.5 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-medium border-0 outline-none cursor-pointer appearance-none",
+                "px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide border-0 outline-none cursor-pointer appearance-none",
                 priorityColors[task.priority || "medium"]
               )}
             >
@@ -261,14 +261,15 @@ export default function TaskItem({ task }) {
               ))}
             </select>
 
+            {/* When chip — compact */}
             {!editingWhen && (
               <button
                 onClick={openWhenEditor}
                 className={clsx(
-                  "flex items-center gap-1 px-1.5 py-0.5 rounded-md transition text-[9px] uppercase tracking-wider",
+                  "flex items-center gap-1 px-2 py-0.5 rounded-full transition text-[10px]",
                   task.due_date
-                    ? "bg-violet-500/15 text-violet-300 hover:bg-violet-500/25"
-                    : "text-white/40 hover:text-white hover:bg-white/5"
+                    ? "bg-violet-500/10 border border-violet-400/30 text-violet-300 hover:brightness-125"
+                    : "border border-white/10 text-white/40 hover:text-white hover:bg-white/5"
                 )}
                 title={task.due_date ? "Edit date" : "Set a date"}
               >
@@ -278,12 +279,16 @@ export default function TaskItem({ task }) {
             )}
           </div>
 
+          {/* Inline date editor — only shows when tapped */}
           {editingWhen && (
             <div
-              className="mt-2 p-2.5 rounded-xl bg-violet-500/10 border border-violet-400/30 space-y-2"
+              className="mt-2 p-3 rounded-xl bg-violet-500/10 border border-violet-400/30 space-y-2"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex flex-wrap items-center gap-2">
+                <label className="text-[10px] uppercase tracking-wider text-violet-300 w-full sm:w-auto">
+                  Date
+                </label>
                 <input
                   ref={dateRef}
                   type="date"
@@ -291,6 +296,11 @@ export default function TaskItem({ task }) {
                   onChange={(e) => setTempDate(e.target.value)}
                   className="bg-transparent border border-violet-400/30 rounded-lg px-2 py-1 outline-none text-xs text-white [color-scheme:dark] cursor-pointer flex-1 min-w-0"
                 />
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="text-[10px] uppercase tracking-wider text-violet-300 w-full sm:w-auto">
+                  Time
+                </label>
                 <input
                   type="time"
                   value={tempTime}
@@ -298,22 +308,22 @@ export default function TaskItem({ task }) {
                   className="bg-transparent border border-violet-400/30 rounded-lg px-2 py-1 outline-none text-xs text-white [color-scheme:dark] cursor-pointer flex-1 min-w-0"
                 />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 pt-1">
                 <button
                   onClick={saveWhen}
-                  className="px-2.5 py-1 rounded-lg bg-violet-500 hover:bg-violet-600 text-white text-[11px] font-semibold"
+                  className="px-3 py-1.5 rounded-lg bg-violet-500 hover:bg-violet-600 text-white text-xs font-semibold"
                 >
                   Save
                 </button>
                 <button
                   onClick={clearWhen}
-                  className="px-2.5 py-1 rounded-lg border border-white/10 text-white/60 hover:text-white text-[11px]"
+                  className="px-3 py-1.5 rounded-lg border border-white/10 text-white/60 hover:text-white text-xs"
                 >
                   Clear
                 </button>
                 <button
                   onClick={() => setEditingWhen(false)}
-                  className="ml-auto text-white/40 hover:text-white text-[11px]"
+                  className="ml-auto px-3 py-1.5 rounded-lg text-white/40 hover:text-white text-xs"
                 >
                   Cancel
                 </button>
@@ -322,28 +332,29 @@ export default function TaskItem({ task }) {
           )}
         </div>
 
+        {/* Action buttons */}
         <div className="flex items-center gap-0.5 sm:gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition shrink-0">
           <button
             onClick={breakdown}
-            className="p-1.5 rounded-lg hover:bg-white/5"
+            className="p-1.5 sm:p-2 rounded-lg hover:bg-white/5"
             title="AI breakdown"
           >
-            <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-violet-400" />
           </button>
           <button
             onClick={() => setExpanded(!expanded)}
-            className="p-1.5 rounded-lg hover:bg-white/5 text-white"
+            className="p-1.5 sm:p-2 rounded-lg hover:bg-white/5 text-white"
           >
             <ChevronDown
-              className={clsx("w-3.5 h-3.5 transition", expanded && "rotate-180")}
+              className={clsx("w-3.5 h-3.5 sm:w-4 sm:h-4 transition", expanded && "rotate-180")}
             />
           </button>
           <button
             onClick={() => remove.mutate()}
-            className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-400"
+            className="p-1.5 sm:p-2 rounded-lg hover:bg-red-500/10 text-red-400"
             title="Delete"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
       </div>
@@ -356,7 +367,7 @@ export default function TaskItem({ task }) {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="pt-3 mt-3 border-t border-white/5">
+            <div className="pt-4 mt-4 border-t border-white/5">
               <textarea
                 defaultValue={task.notes}
                 onBlur={(e) => update.mutate({ notes: e.target.value })}
