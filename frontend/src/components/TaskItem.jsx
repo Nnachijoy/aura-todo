@@ -243,16 +243,17 @@ export default function TaskItem({ task }) {
             </div>
           )}
 
-          {/* Meta row — priority + when chip */}
+          {/* Meta row — priority + when chip (matched sizes) */}
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <select
               value={task.priority || "medium"}
               onChange={(e) => update.mutate({ priority: e.target.value })}
               onClick={(e) => e.stopPropagation()}
               className={clsx(
-                "px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide border-0 outline-none cursor-pointer appearance-none",
+                "inline-flex items-center px-2 rounded-full text-[10px] uppercase tracking-wide border-0 outline-none cursor-pointer appearance-none leading-none",
                 priorityColors[task.priority || "medium"]
               )}
+              style={{ fontSize: "10px", height: "20px" }}
             >
               {PRIORITIES.map((p) => (
                 <option key={p} value={p} className="bg-[#141416] text-white">
@@ -261,16 +262,16 @@ export default function TaskItem({ task }) {
               ))}
             </select>
 
-            {/* When chip — compact */}
             {!editingWhen && (
               <button
                 onClick={openWhenEditor}
                 className={clsx(
-                  "flex items-center gap-1 px-2 py-0.5 rounded-full transition text-[10px]",
+                  "inline-flex items-center gap-1 px-2 rounded-full transition text-[10px] leading-none",
                   task.due_date
                     ? "bg-violet-500/10 border border-violet-400/30 text-violet-300 hover:brightness-125"
                     : "border border-white/10 text-white/40 hover:text-white hover:bg-white/5"
                 )}
+                style={{ height: "20px" }}
                 title={task.due_date ? "Edit date" : "Set a date"}
               >
                 <CalendarIcon className="w-2.5 h-2.5" />
@@ -295,6 +296,7 @@ export default function TaskItem({ task }) {
                   value={tempDate}
                   onChange={(e) => setTempDate(e.target.value)}
                   className="bg-transparent border border-violet-400/30 rounded-lg px-2 py-1 outline-none text-xs text-white [color-scheme:dark] cursor-pointer flex-1 min-w-0"
+                  style={{ fontSize: "14px" }}
                 />
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -306,6 +308,7 @@ export default function TaskItem({ task }) {
                   value={tempTime}
                   onChange={(e) => setTempTime(e.target.value)}
                   className="bg-transparent border border-violet-400/30 rounded-lg px-2 py-1 outline-none text-xs text-white [color-scheme:dark] cursor-pointer flex-1 min-w-0"
+                  style={{ fontSize: "14px" }}
                 />
               </div>
               <div className="flex items-center gap-2 pt-1">
