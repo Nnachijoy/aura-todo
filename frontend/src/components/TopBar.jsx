@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, ChevronDown, Plus } from "lucide-react";
+import { Sparkles, ChevronDown, Plus, AlertCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import clsx from "clsx";
@@ -22,6 +22,8 @@ export default function TopBar() {
   const [endTime, setEndTime] = useState("");
   const [priorityOpen, setPriorityOpen] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const qc = useQueryClient();
 
   const selected = PRIORITIES.find((p) => p.value === priority);
@@ -43,19 +45,24 @@ export default function TopBar() {
 
   const submit = async (e) => {
     if (e) e.preventDefault();
-    if (!text.trim()) return;
+    if (!text.trim() || submitting) return;
+
+    setError("");
+    setSubmitting(true);
 
     const dueISO = buildISO(dueDate, startTime);
     const endISO = endTime ? buildISO(dueDate, endTime) : null;
     const payloadPriority = priority || "medium";
     const rawTitle = text.trim();
 
+    // Clear input immediately for responsiveness
     setText("");
     setPriority("");
     setDueDate("");
     setStartTime("");
     setEndTime("");
 
+    // Add optimistic task locally so it appears instantly
     const tempId = `temp-${Date.now()}`;
     const optimisticTask = {
       id: tempId,
@@ -76,23 +83,29 @@ export default function TopBar() {
     const previous = qc.getQueryData(["tasks"]) || [];
     qc.setQueryData(["tasks"], [...previous, optimisticTask]);
 
+    // Try to create the task — with a longer timeout for cold-start backend
     try {
-      let parsed = {};
+      let parsed = { title: rawTitle };
       try {
-        const p = await api.post("/ai/parse", { text: rawTitle });
+        const p = await api.post("/ai/parse", { text: rawTitle }, { timeout: 60000 });
         parsed = p.data;
       } catch {
         parsed = { title: rawTitle };
       }
 
-      const response = await api.post("/tasks/", {
-        ...parsed,
-        title: parsed.title || rawTitle,
-        priority: payloadPriority,
-        due_date: dueISO || parsed.due_date,
-        due_end: endISO,
-      });
+      const response = await api.post(
+        "/tasks/",
+        {
+          ...parsed,
+          title: parsed.title || rawTitle,
+          priority: payloadPriority,
+          due_date: dueISO || parsed.due_date,
+          due_end: endISO,
+        },
+        { timeout: 60000 }
+      );
 
+      // Replace the temporary task with the real one
       qc.setQueryData(["tasks"], (old = []) =>
         old.map((t) => (t.id === tempId ? response.data : t))
       );
@@ -107,12 +120,17 @@ export default function TopBar() {
             setShowConnectModal(true);
           }
         } catch (err) {
-          console.warn("Could not check Google status:", err);
+          // silent
         }
       }
     } catch (err) {
+      // Roll back on failure
       qc.setQueryData(["tasks"], previous);
-      console.error("Failed to add task:", err);
+      const msg = err?.response?.data?.detail || err?.message || "Failed to add task";
+      setError(typeof msg === "string" ? msg : "Failed to add task");
+      console.error("Add task failed:", err);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -131,7 +149,6 @@ export default function TopBar() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-5 sm:mb-8 bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl p-2 flex flex-col sm:flex-row sm:items-center gap-2 focus-within:ring-2 focus-within:ring-violet-500/50 transition"
       >
-        {/* Input row — always first */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <Sparkles className="ml-1 sm:ml-2 w-5 h-5 text-violet-400 shrink-0" />
           <input
@@ -139,11 +156,11 @@ export default function TopBar() {
             onChange={(e) => setText(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder="Type a task..."
-            className="flex-1 min-w-0 bg-transparent focus:outline-none text-base placeholder:text-[var(--text-dim)] text-app py-2"
+            disabled={submitting}
+            className="flex-1 min-w-0 bg-transparent focus:outline-none text-base placeholder:text-[var(--text-dim)] text-app py-2 disabled:opacity-50"
           />
         </div>
 
-        {/* Buttons row — wraps on mobile */}
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           <WhenPicker
             date={dueDate}
@@ -195,12 +212,26 @@ export default function TopBar() {
 
           <button
             type="submit"
-            className="flex-1 sm:flex-initial px-5 py-2.5 sm:py-2 rounded-xl bg-violet-500 hover:bg-violet-600 transition text-white text-sm font-semibold shrink-0 flex items-center justify-center gap-1.5"
+            disabled={submitting}
+            className="flex-1 sm:flex-initial px-5 py-3 sm:py-2 rounded-xl bg-violet-500 hover:bg-violet-600 disabled:opacity-50 transition text-white text-sm font-semibold shrink-0 flex items-center justify-center gap-1.5"
           >
-            <Plus className="w-4 h-4 sm:hidden" />
-            Add
+            {submitting ? (
+              <span className="animate-pulse">Adding...</span>
+            ) : (
+              <>
+                <Plus className="w-4 h-4 sm:hidden" />
+                Add
+              </>
+            )}
           </button>
         </div>
+
+        {error && (
+          <div className="w-full flex items-center gap-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
       </motion.form>
 
       <ConnectCalendarModal
