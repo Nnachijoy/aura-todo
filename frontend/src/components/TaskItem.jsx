@@ -132,7 +132,6 @@ export default function TaskItem({ task }) {
     }
   };
 
-  // --- When editor ---
   const openWhenEditor = (e) => {
     e.stopPropagation();
     if (task.due_date) {
@@ -183,16 +182,16 @@ export default function TaskItem({ task }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -20 }}
       className={clsx(
-        "group bg-white/5 backdrop-blur border border-white/5 rounded-2xl p-4 transition-all",
+        "group bg-white/5 backdrop-blur border border-white/5 rounded-2xl p-3 sm:p-4 transition-all",
         "hover:border-white/10 hover:bg-white/10",
         isDragging && "opacity-50 shadow-2xl ring-2 ring-violet-500"
       )}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-2 sm:gap-3">
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab opacity-0 group-hover:opacity-40 hover:!opacity-100 transition text-white"
+          className="hidden sm:block cursor-grab opacity-0 group-hover:opacity-40 hover:!opacity-100 transition text-white mt-1"
         >
           <GripVertical className="w-4 h-4" />
         </button>
@@ -200,7 +199,7 @@ export default function TaskItem({ task }) {
         <button
           onClick={toggle}
           className={clsx(
-            "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0",
+            "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0 mt-0.5",
             task.completed
               ? "bg-violet-500 border-violet-500 scale-95"
               : "border-white/20 hover:border-violet-400"
@@ -223,7 +222,7 @@ export default function TaskItem({ task }) {
             <div
               onClick={startEdit}
               className={clsx(
-                "font-medium transition text-white cursor-text rounded px-1 -mx-1 hover:bg-white/5",
+                "font-medium transition text-white cursor-text rounded px-1 -mx-1 hover:bg-white/5 break-words",
                 task.completed && "line-through text-white/30"
               )}
               title="Click to edit"
@@ -232,7 +231,7 @@ export default function TaskItem({ task }) {
             </div>
           )}
 
-          <div className="flex items-center gap-2 mt-1 text-xs text-white/40 flex-wrap">
+          <div className="flex items-center gap-2 mt-1.5 text-xs text-white/40 flex-wrap">
             <select
               value={task.priority || "medium"}
               onChange={(e) => update.mutate({ priority: e.target.value })}
@@ -251,10 +250,9 @@ export default function TaskItem({ task }) {
 
             {task.tags && <span>{task.tags}</span>}
 
-            {/* Click-to-edit When badge */}
             {editingWhen ? (
               <div
-                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-violet-500/10 border border-violet-400/30"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-violet-500/10 border border-violet-400/30 flex-wrap"
                 onClick={(e) => e.stopPropagation()}
               >
                 <input
@@ -321,28 +319,28 @@ export default function TaskItem({ task }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+        <div className="flex items-center gap-0.5 sm:gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition shrink-0">
           <button
             onClick={breakdown}
-            className="p-2 rounded-lg hover:bg-white/5"
+            className="p-1.5 sm:p-2 rounded-lg hover:bg-white/5"
             title="AI breakdown"
           >
-            <Sparkles className="w-4 h-4 text-violet-400" />
+            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-violet-400" />
           </button>
           <button
             onClick={() => setExpanded(!expanded)}
-            className="p-2 rounded-lg hover:bg-white/5 text-white"
+            className="p-1.5 sm:p-2 rounded-lg hover:bg-white/5 text-white"
           >
             <ChevronDown
-              className={clsx("w-4 h-4 transition", expanded && "rotate-180")}
+              className={clsx("w-3.5 h-3.5 sm:w-4 sm:h-4 transition", expanded && "rotate-180")}
             />
           </button>
           <button
             onClick={() => remove.mutate()}
-            className="p-2 rounded-lg hover:bg-red-500/10 text-red-400"
+            className="p-1.5 sm:p-2 rounded-lg hover:bg-red-500/10 text-red-400"
             title="Delete"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
       </div>

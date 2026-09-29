@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, ChevronDown } from "lucide-react";
+import { Sparkles, ChevronDown, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import clsx from "clsx";
@@ -99,7 +99,6 @@ export default function TopBar() {
 
       refresh();
 
-      // Trigger Google Calendar connect modal
       if (dueISO) {
         try {
           const statusRes = await api.get("/google/status");
@@ -109,8 +108,6 @@ export default function TopBar() {
           }
         } catch (err) {
           console.warn("Could not check Google status:", err);
-          const alreadyDismissed = localStorage.getItem("aura_connect_dismissed");
-          if (!alreadyDismissed) setShowConnectModal(true);
         }
       }
     } catch (err) {
@@ -132,10 +129,11 @@ export default function TopBar() {
         onSubmit={submit}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-6 sm:mb-8 bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl p-2 flex flex-col sm:flex-row sm:items-center gap-2 focus-within:ring-2 focus-within:ring-violet-500/50 transition"
+        className="mb-5 sm:mb-8 bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl p-2 flex flex-col sm:flex-row sm:items-center gap-2 focus-within:ring-2 focus-within:ring-violet-500/50 transition"
       >
+        {/* Input row — always first */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <Sparkles className="ml-2 w-5 h-5 text-violet-400 shrink-0" />
+          <Sparkles className="ml-1 sm:ml-2 w-5 h-5 text-violet-400 shrink-0" />
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -145,6 +143,7 @@ export default function TopBar() {
           />
         </div>
 
+        {/* Buttons row — wraps on mobile */}
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           <WhenPicker
             date={dueDate}
@@ -196,8 +195,9 @@ export default function TopBar() {
 
           <button
             type="submit"
-            className="px-5 py-2 rounded-xl bg-violet-500 hover:bg-violet-600 transition text-white text-sm font-semibold shrink-0 ml-auto sm:ml-0"
+            className="flex-1 sm:flex-initial px-5 py-2.5 sm:py-2 rounded-xl bg-violet-500 hover:bg-violet-600 transition text-white text-sm font-semibold shrink-0 flex items-center justify-center gap-1.5"
           >
+            <Plus className="w-4 h-4 sm:hidden" />
             Add
           </button>
         </div>
