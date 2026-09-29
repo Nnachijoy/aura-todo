@@ -42,7 +42,7 @@ export default function TopBar() {
   };
 
   const submit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!text.trim()) return;
 
     const dueISO = buildISO(dueDate, startTime);
@@ -99,7 +99,7 @@ export default function TopBar() {
 
       refresh();
 
-      // Trigger the Google Calendar connect prompt
+      // Trigger Google Calendar connect modal
       if (dueISO) {
         try {
           const statusRes = await api.get("/google/status");
@@ -109,7 +109,6 @@ export default function TopBar() {
           }
         } catch (err) {
           console.warn("Could not check Google status:", err);
-          // Still show the modal if we can't check — the user can skip
           const alreadyDismissed = localStorage.getItem("aura_connect_dismissed");
           if (!alreadyDismissed) setShowConnectModal(true);
         }
@@ -117,6 +116,13 @@ export default function TopBar() {
     } catch (err) {
       qc.setQueryData(["tasks"], previous);
       console.error("Failed to add task:", err);
+    }
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      submit(e);
     }
   };
 
@@ -133,6 +139,7 @@ export default function TopBar() {
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
+            onKeyDown={onKeyDown}
             placeholder="Type a task..."
             className="flex-1 min-w-0 bg-transparent focus:outline-none text-base placeholder:text-[var(--text-dim)] text-app py-2"
           />
